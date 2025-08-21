@@ -1,0 +1,149 @@
+function drawAudioProgressBar(x, y, width, height, barInitialColor, arcRadius, currentTime, duration, fontColor, ctx, audioProgressPosition, progressWidth = 0, showTime = false, imgData) {
+
+  if (showTime) {
+    ctx.beginPath();
+    ctx.fillStyle = fontColor;
+    ctx.textAlign = "start";
+    ctx.textBaseline = "top";
+
+
+
+    ctx.putImageData(imgData.audioStartingTimeBackgroundImg, x, audioProgressPosition.audioStartTimeYPos);
+    ctx.fillText("0:" + Math.floor(currentTime).toLocaleString("en-US", {minimumIntegerDigits: 2,}), x, audioProgressPosition.audioStartTimeYPos);
+
+    ctx.textAlign = "end";
+    ctx.textBaseline = "top";
+
+    ctx.putImageData(imgData.audioEndingTimeBackgroundImg, audioProgressPosition.audioEndingTimeImgXPos, audioProgressPosition.audioStartTimeYPos);
+    ctx.fillText("0:" + Math.ceil(duration - currentTime).toLocaleString("en-US", {minimumIntegerDigits: 2,}), audioProgressPosition.audioEndTimeXPos, audioProgressPosition.audioStartTimeYPos);
+
+  }
+
+  ctx.beginPath();
+  ctx.putImageData(imgData.progressBarBackgroundImg, audioProgressPosition.progressBarBackgroundImgXPos, audioProgressPosition.progressBarBackgroundImgYPos);
+
+  // Draw progress bar of incomplete section
+  ctx.fillStyle = barInitialColor;
+  ctx.fillRect(x, y, width, height);
+
+  ctx.fillStyle = fontColor;
+  ctx.fillRect(x, y, progressWidth, height);
+
+  ctx.beginPath();
+  ctx.fillStyle = fontColor;
+
+  ctx.arc(audioProgressPosition.progressBarArcXPos + progressWidth,  audioProgressPosition.progressBarArcYPos, arcRadius, 0, 6.29); // Replacing repeating calculation for 2 * Math.PI we write 6.29
+  ctx.fill();
+
+  // console.log(x,audioProgressPosition.progressBarArcXPos + progressWidth)
+}
+
+function drawAudioEqualizer(x, y, equalizerWidth, barHeight, interval, barColor, ctx, imgData, freqArr, isHorizontalEqualizer = true, upwardEqualizer = true, r = 1, clearOldImg = true) {
+  let clearFactor = upwardEqualizer ? barHeight : 0;
+
+  if (clearOldImg) {
+    isHorizontalEqualizer ? ctx.putImageData(imgData.equalizerBackgroundImg, x - 10, y - 10 - clearFactor ) : 
+                            ctx.putImageData(imgData.equalizerBackgroundImg, x - 10 - clearFactor, y - 10); // Remove previous Equalizer
+  }
+
+  ctx.strokeStyle = barColor;
+  ctx.fillStyle = barColor; // Set Color of equalizer
+
+  let barWidth = equalizerWidth / interval - 5;
+  r = r == 0 ? 0 : upwardEqualizer ? barWidth / 2 : -barWidth / 2;
+
+  for (let i = 0; i < interval; i++) {
+    let num = i;
+    barHeight = freqArr[num];
+
+    barHeight = upwardEqualizer ? -barHeight : barHeight;
+
+    if (isHorizontalEqualizer) {
+      // Horozontal Equalizer
+
+      ctx.beginPath();
+
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + barHeight + r);
+      ctx.arcTo(x, y + barHeight, x + Math.abs(r), y + barHeight, Math.abs(r));
+      ctx.lineTo(x + barWidth - Math.abs(r), y + barHeight);
+      ctx.arcTo(
+        x + barWidth,
+        y + barHeight,
+        x + barWidth,
+        y + barHeight + r,
+        Math.abs(r)
+      );
+      ctx.lineTo(x + barWidth, y);
+      ctx.lineTo(x, y);
+
+      ctx.stroke();
+      ctx.fill();
+
+      x += equalizerWidth / interval;
+    } else {
+      // Verticle Equalizer
+
+      ctx.beginPath();
+
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + barHeight + r, y);
+      ctx.arcTo(x + barHeight, y, x + barHeight, y + Math.abs(r), Math.abs(r));
+      ctx.lineTo(x + barHeight, y + barWidth - Math.abs(r));
+      ctx.arcTo(
+        x + barHeight,
+        y + barWidth,
+        x + barHeight + r,
+        y + barWidth,
+        Math.abs(r)
+      );
+      ctx.lineTo(x, y + barWidth);
+      ctx.lineTo(x, y);
+
+      ctx.stroke();
+      ctx.fill();
+
+      y += equalizerWidth / interval;
+    }
+  }
+}
+
+function rotateProfileImg(data, ctx, rotatingAngle, profileImg) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = data.complementaryColor;
+  ctx.arc(data.profileImageArcPostionX, data.profileImageArcPostionY, data.imgArc, 0, 6.29, false  ); // Remove Mth.PI with 6.29
+  ctx.lineWidth = data.imgLineWidth;
+  ctx.stroke();
+  ctx.clip();
+
+  ctx.translate(data.profileImageArcPostionX, data.profileImageArcPostionY);
+  ctx.rotate(rotatingAngle * 0.0175); // Replace Math.PI/180 with 0.0175
+  ctx.drawImage(profileImg, ...data.rotatedImgPosition);
+
+  //Restore the ctx as previous
+  ctx.rotate(-rotatingAngle * 0.0175); // Replace Math.PI/180 with 0.0175
+  ctx.translate(-data.profileImageArcPostionX, data.profileImageArcPostionY);
+  ctx.restore();
+}
+
+function typingAnimation(text, i, x, y, color, fontStyle, imgData, ctx, textPositionX, textPositionY) {
+  let char = text.substr(0, i);
+
+
+  ctx.putImageData(imgData, x, y);
+  // console.log('PutImage', y)
+  ctx.fillStyle = color;
+  ctx.font = fontStyle;
+
+  ctx.textAlign = "start";
+  ctx.textBaseline = "top";
+  ctx.fillText(char.toUpperCase(), textPositionX, textPositionY);
+}
+
+module.exports = {
+  drawAudioProgressBar,
+  drawAudioEqualizer,
+  rotateProfileImg,
+  typingAnimation,
+};

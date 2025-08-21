@@ -1,0 +1,267 @@
+function drawAudioProgressBar(x, y, width, height, barInitialColor, arcRadius, currentTime, duration, fontColor, ctx, audioProgressPosition, progressWidth = 0, showTime = false, imgData) {
+
+  if (showTime) {
+    ctx.beginPath();
+    ctx.fillStyle = fontColor;
+    ctx.textAlign = "start";
+    ctx.textBaseline = "top";
+
+
+
+    ctx.putImageData(imgData.audioStartingTimeBackgroundImg, x, audioProgressPosition.audioStartTimeYPos);
+    ctx.fillText("0:" + Math.floor(currentTime).toLocaleString("en-US", { minimumIntegerDigits: 2, }), x, audioProgressPosition.audioStartTimeYPos);
+
+    ctx.textAlign = "end";
+    ctx.textBaseline = "top";
+
+    ctx.putImageData(imgData.audioEndingTimeBackgroundImg, audioProgressPosition.audioEndingTimeImgXPos, audioProgressPosition.audioStartTimeYPos);
+    ctx.fillText("0:" + Math.ceil(duration - currentTime).toLocaleString("en-US", { minimumIntegerDigits: 2, }), audioProgressPosition.audioEndTimeXPos, audioProgressPosition.audioStartTimeYPos);
+
+  }
+
+  ctx.beginPath();
+  ctx.putImageData(imgData.progressBarBackgroundImg, audioProgressPosition.progressBarBackgroundImgXPos, audioProgressPosition.progressBarBackgroundImgYPos);
+
+  // Draw progress bar of incomplete section
+  ctx.fillStyle = barInitialColor;
+  ctx.fillRect(x, y, width, height);
+
+  ctx.fillStyle = fontColor;
+  ctx.fillRect(x, y, progressWidth, height);
+
+  ctx.beginPath();
+  ctx.fillStyle = fontColor;
+
+  ctx.arc(audioProgressPosition.progressBarArcXPos + progressWidth, audioProgressPosition.progressBarArcYPos, arcRadius, 0, 6.29); // Replacing repeating calculation for 2 * Math.PI we write 6.29
+  ctx.fill();
+
+}
+
+function drawAudioEqualizer(x, y, equalizerWidth, barHeight, interval, barColor, ctx, imgData, freqArr, isHorizontalEqualizer = true, upwardEqualizer = true, r = 1, clearOldImg = true) {
+  let clearFactor = upwardEqualizer ? barHeight : 0;
+
+  if (clearOldImg) {
+    isHorizontalEqualizer ? ctx.putImageData(imgData.equalizerBackgroundImg, x - 10, y - 10 - clearFactor) :
+      ctx.putImageData(imgData.equalizerBackgroundImg, x - 10 - clearFactor, y - 10); // Remove previous Equalizer
+  }
+
+  ctx.strokeStyle = barColor;
+  ctx.fillStyle = barColor; // Set Color of equalizer
+
+  let barWidth = equalizerWidth / interval - 5;
+  r = r == 0 ? 0 : upwardEqualizer ? barWidth / 2 : -barWidth / 2;
+
+  for (let i = 0; i < interval; i++) {
+    let num = i;
+    barHeight = freqArr[num];
+
+    barHeight = upwardEqualizer ? -barHeight : barHeight;
+
+    if (isHorizontalEqualizer) {
+      // Horozontal Equalizer
+
+      ctx.beginPath();
+
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + barHeight + r);
+      ctx.arcTo(x, y + barHeight, x + Math.abs(r), y + barHeight, Math.abs(r));
+      ctx.lineTo(x + barWidth - Math.abs(r), y + barHeight);
+      ctx.arcTo(
+        x + barWidth,
+        y + barHeight,
+        x + barWidth,
+        y + barHeight + r,
+        Math.abs(r)
+      );
+      ctx.lineTo(x + barWidth, y);
+      ctx.lineTo(x, y);
+
+      ctx.stroke();
+      ctx.fill();
+
+      x += equalizerWidth / interval;
+    } else {
+      // Verticle Equalizer
+
+      ctx.beginPath();
+
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + barHeight + r, y);
+      ctx.arcTo(x + barHeight, y, x + barHeight, y + Math.abs(r), Math.abs(r));
+      ctx.lineTo(x + barHeight, y + barWidth - Math.abs(r));
+      ctx.arcTo(
+        x + barHeight,
+        y + barWidth,
+        x + barHeight + r,
+        y + barWidth,
+        Math.abs(r)
+      );
+      ctx.lineTo(x, y + barWidth);
+      ctx.lineTo(x, y);
+
+      ctx.stroke();
+      ctx.fill();
+
+      y += equalizerWidth / interval;
+    }
+  }
+}
+
+function rotateProfileImg(data, ctx, rotatingAngle, profileImg) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = data.complementaryColor;
+  ctx.arc(data.profileImageArcPostionX, data.profileImageArcPostionY, data.imgArc, 0, 6.29, false); // Remove Mth.PI with 6.29
+  ctx.lineWidth = data.imgLineWidth;
+  ctx.stroke();
+  ctx.clip();
+
+  ctx.translate(data.profileImageArcPostionX, data.profileImageArcPostionY);
+  ctx.rotate(rotatingAngle * 0.0175); // Replace Math.PI/180 with 0.0175
+  ctx.drawImage(profileImg, ...data.rotatedImgPosition);
+
+  //Restore the ctx as previous
+  ctx.rotate(-rotatingAngle * 0.0175); // Replace Math.PI/180 with 0.0175
+  ctx.translate(-data.profileImageArcPostionX, data.profileImageArcPostionY);
+  ctx.restore();
+}
+
+function typingAnimation(text, i, x, y, color, fontStyle, imgData, ctx, textPositionX, textPositionY) {
+  let char = text.substr(0, i);
+
+
+  ctx.putImageData(imgData, x, y);
+  // console.log('PutImage', y)
+  ctx.fillStyle = color;
+  ctx.font = fontStyle;
+
+  ctx.textAlign = "start";
+  ctx.textBaseline = "top";
+  ctx.fillText(char.toUpperCase(), textPositionX, textPositionY);
+}
+
+function  rotatePhonograph(data, ctx, rotatingAngle, profileImg, phonographImg) {
+
+
+  // New Code
+
+  ctx.save()
+
+  // Draw Phonograph
+  ctx.beginPath();
+  ctx.translate(data.phonographX, data.phonographY)
+  ctx.rotate(rotatingAngle * 0.0175);  // Replace Math.PI/180 with 0.0175
+  ctx.drawImage(phonographImg, ...data.rotatedImgPosition)
+
+  // Draw dic for phonographImg
+  ctx.beginPath();
+  ctx.fillStyle = data.complementaryColor
+  ctx.strokeStyle = data.complementaryColor;
+  ctx.arc(0, 0, 50, 0, 2 * Math.PI);
+  // ctx.fill()
+  ctx.lineWidth = 94;
+  ctx.stroke();
+
+  ctx.restore()
+
+
+
+  // Draw Profile Image
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.translate(data.profileImageArcPostionX - 20, data.profileImageArcPostionY)
+  ctx.rotate(10 / 180);
+  ctx.drawImage(profileImg, -340, -340, 680, 680)
+  ctx.lineWidth = 40  // Border width
+  ctx.strokeStyle = data.complementaryColor;
+  ctx.strokeRect(-360, -360, 720, 720);
+  ctx.restore()
+
+
+}
+function rotatePhonographShivam1(data, ctx, rotatingAngle, profileImg, phonographImg) {
+  // --- ROTATING GROUP (phonograph + profile) ---
+  // These variables control the scaling and positioning of the rotating group
+  const plateScaleRot = 1.25 * 0.75; // Decreased by 5%
+  const plateSizeRot = data.rotatedImgPosition[2] * plateScaleRot; // Phonograph diameter
+  const profileSizeRot = plateSizeRot * 0.58 * 0.85; // Profile image diameter, also decreased by 5%
+  const centerXRot = data.canvasWidth / 2;
+  const centerYRot = data.canvasHeight / 2-160;
+
+  // Draw the rotating phonograph and profile images
+  ctx.save();
+  ctx.translate(centerXRot, centerYRot); // Move origin to canvas center
+  ctx.rotate(rotatingAngle * 0.0130); // Apply rotation (convert degrees to radians)
+  // Draw phonograph image, centered
+  ctx.drawImage(
+    phonographImg,
+    -plateSizeRot/2, // Center horizontally
+    -plateSizeRot/2, // Center vertically
+    plateSizeRot, // Width
+    plateSizeRot // Height
+  );
+  // Draw profile image as a circle, centered
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, profileSizeRot/2, 0, 2 * Math.PI); // Circular clipping path
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(
+    profileImg,
+    -profileSizeRot/2, // Center horizontally
+    -profileSizeRot/2, // Center vertically
+    profileSizeRot, // Width
+    profileSizeRot // Height
+  );
+  ctx.restore(); // End profile clipping
+  ctx.restore(); // End phonograph/profile rotation
+}
+function drawSineWave(amplitude, frequency, color, ctx, leftSinWaveCenterY, rightSinWaveCenterY, waveNum, waveLength, leftShift, rightShift, rightSinWaveBackgroundX) {
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 5;
+  let leftPhase = (Math.PI / 2) * 2 + leftShift;
+  let rightPhase = (Math.PI / 2) + rightShift;
+  let leftWaveLength = waveLength;
+  let rightWaveLength = waveLength + 110;
+
+
+  for (let i = 0; i < waveNum; i++) {
+    amplitude -= 10;
+    leftSinWaveCenterY += 30;
+    rightSinWaveCenterY -= 30;
+
+
+
+    ctx.moveTo(-200, leftSinWaveCenterY);
+
+    // SinWave of left Side
+    for (let x = 0; x <= leftWaveLength; x += 5) {
+      const y = leftSinWaveCenterY + amplitude * Math.sin((x / frequency) + leftPhase) * 2;
+      ctx.lineTo(x, y);
+    }
+
+
+
+    //  SinWave of right side
+    for (let x = 0; x <= rightWaveLength; x += 5) {
+      const y = rightSinWaveCenterY + amplitude * (Math.sin((x / frequency) + rightPhase)) * 2;
+      ctx.lineTo(x + rightSinWaveBackgroundX, y);
+    }
+
+    ctx.stroke();
+  }
+
+}
+
+
+module.exports = {
+  drawAudioProgressBar,
+  drawAudioEqualizer,
+  rotateProfileImg,
+  typingAnimation,
+  rotatePhonograph,
+  rotatePhonographShivam1,
+  drawSineWave
+};

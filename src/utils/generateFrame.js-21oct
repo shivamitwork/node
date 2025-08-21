@@ -1,0 +1,586 @@
+const {
+    drawAudioProgressBar,
+    drawAudioEqualizer,
+    rotateProfileImg,
+    typingAnimation,
+    rotatePhonograph,
+    drawSineWave
+} = require("./generalFeature");
+
+function vinylTemplate(data, ctx, profileImg, imgData) {
+    // Set Background color of Outermost part
+    ctx.fillStyle = "rgb(255,255,255)"; // To remove player background effcet due to transparency of dominate color;
+    ctx.fillRect(0, 0, data.canvasWidth, data.canvasHeight);
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+    ctx.fillRect(0, 0, data.canvasWidth, data.canvasHeight);
+
+    imgData.equalizerBackgroundImg = ctx.getImageData(
+        0,
+        0,
+        data.barHeight,
+        data.equalizerWidth + 20
+    );
+
+    drawAudioEqualizer(
+        0,
+        0,
+        data.equalizerWidth,
+        data.barHeight,
+        data.interval,
+        data.complementaryColor,
+        ctx,
+        imgData,
+        data.freqArr[0],
+        false,
+        false,
+        0
+    );
+
+    ctx.font = data.titleFontStyleForBackEnd;
+    ctx.fillStyle = data.fontColor;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    // Type title
+
+    data.titleArr.forEach((item, i) => {
+        ctx.fillText(item.word, item.textPositionX, item.textPositionY);
+    });
+
+    // Type User Name
+    ctx.font = data.userNameFontStyleForBackEnd;
+    ctx.fillText(data.userName, data.userNamePositionX, data.userNamePositionY);
+
+    imgData.audioStartingTimeBackgroundImg = ctx.getImageData(
+        data.progressBarX,
+        data.progressBarY - 20 - ctx.measureText("M").width - 30,
+        ctx.measureText("0:00").width + 80,
+        ctx.measureText("M").width + 20
+    );
+    imgData.audioEndingTimeBackgroundImg = ctx.getImageData(
+        data.progressBarwidth +
+        data.progressBarX -
+        ctx.measureText("0:00").width -
+        60,
+        data.progressBarY - 20 - ctx.measureText("M").width,
+        ctx.measureText("0:00").width + 70,
+        ctx.measureText("M").width + 20
+    );
+    imgData.progressBarBackgroundImg = ctx.getImageData(
+        data.progressBarX - 20,
+        data.progressBarY - 20,
+        data.progressBarwidth + 40,
+        50
+    );
+
+    ctx.font = data.audioFontStyleForBackEnd; // Set font style for audio time
+
+    drawAudioProgressBar(
+        data.progressBarX,
+        data.progressBarY,
+        data.progressBarwidth,
+        10,
+        data.complementaryColor,
+        20,
+        0,
+        data.duration,
+        data.fontColor,
+        ctx,
+        data.audioProgressPosition,
+        0,
+        true,
+        imgData
+    );
+
+    rotateProfileImg(data, ctx, 0, profileImg);
+}
+
+function animateVinyl(data, ctx, i, j, time, imgData, profileImg, l, k) {
+    timeSpend = (i + 1) / data.frameRate;
+    progressPercentage = i / (data.frameCount - 1);
+
+    drawAudioProgressBar(
+        data.progressBarX,
+        data.progressBarY,
+        data.progressBarwidth,
+        10,
+        data.complementaryColor,
+        20,
+        timeSpend,
+        data.duration,
+        data.fontColor,
+        ctx,
+        data.audioProgressPosition,
+        (data.progressBarwidth - 40) * progressPercentage,
+        true,
+        imgData
+    );
+    rotateProfileImg(data, ctx, 2 * i, profileImg); // Increase angile by 2 degree
+    Number.isInteger(j / 6)
+        ? drawAudioEqualizer(
+            0,
+            0,
+            data.equalizerWidth,
+            data.barHeight,
+            data.interval,
+            data.complementaryColor,
+            ctx,
+            imgData,
+            data.freqArr[j / 6],
+            false,
+            false,
+            0
+        )
+        : "";
+}
+
+function syncTemplate(data, ctx, profileImg, imgData) {
+    ctx.fillStyle = "rgb(255,255,255)"; // To remove player background effcet due to transparency of dominate color;
+    ctx.fillRect(0, 0, data.canvasWidth, data.canvasHeight);
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+    ctx.fillRect(0, 0, data.canvasWidth, data.canvasHeight);
+
+    // Draw Profile Image
+
+    ctx.beginPath();
+    ctx.strokeStyle = data.complementaryColor;
+    // ctx.roundRect(data.profileImagePositionX, data.profileImagePositionY, data.profileImgWidth, data.profileImgHeight, data.profileImgRadius)
+    // console.log(data.profileImagePositionX, data.profileImagePositionY, data.profileImgWidth, data.profileImgHeight, data.profileImgRadius)
+    // ctx.stroke()
+    // ctx.save()
+    // ctx.clip()
+    ctx.drawImage(
+        profileImg,
+        data.profileImagePositionX,
+        data.profileImagePositionY,
+        data.profileImgWidth,
+        data.profileImgHeight
+    );
+    ctx.restore();
+
+    let titleBackgroundImgWidth = data.isCardShapeRectangle ? 1060 : 830;
+
+    data.titleArr.forEach((item, i) => {
+        imgData.titleBackgroundImg[i] = ctx.getImageData(
+            item.backgroundImgPositionX,
+            item.backgroundImgPositionY,
+            titleBackgroundImgWidth,
+            data.titleFontHeight + 10
+        );
+    });
+
+    // Print Title on Canvas
+
+    ctx.fillStyle = data.fontColor;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    let textPositionX = data.isCardShapeRectangle ? 540 : 1384;
+
+    data.titleArr.forEach((item) => {
+        ctx.fillText(item.word, textPositionX, item.textPositionY);
+    });
+
+    // Type Artist Name
+
+    ctx.font = data.userNameFontStyleForBackEnd;
+
+    imgData.userNameeBackgroundImg = data.isCardShapeRectangle
+        ? ctx.getImageData(
+            data.userNameeBackgroundImgPositionX,
+            data.userNameeBackgroundImgPositionY,
+            1060,
+            data.userNameFontHeight + 20
+        )
+        : ctx.getImageData(
+            data.userNameeBackgroundImgPositionX,
+            data.userNameeBackgroundImgPositionY,
+            830,
+            data.userNameFontHeight + 30
+        );
+    ctx.fillStyle = data.fontColor;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    data.isCardShapeRectangle
+        ? ctx.fillText(data.userName.toUpperCase(), 540, 1200)
+        : ctx.fillText(
+            data.userName.toUpperCase(),
+            1384,
+            926 - data.userNameFontHeight
+        );
+
+    // Draw Player Image
+
+    //Previous
+
+    //Background
+
+    ctx.beginPath();
+    data.isCardShapeRectangle
+        ? ctx.arc(370, 1370, 45, 0, Math.PI * 2, false)
+        : ctx.arc(661, 1416, 60, 0, Math.PI * 2, false);
+    ctx.stroke();
+    ctx.fillStyle = data.complementaryColor;
+    ctx.fill();
+
+    // Symbol
+
+    ctx.fillStyle = "rgb(255,255,255)"; // White backgrond draw due to transparent background color.
+
+    data.isCardShapeRectangle
+        ? ctx.fillRect(351, 1356, 5, 25)
+        : ctx.fillRect(645, 1401, 6, 32);
+
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+
+    data.isCardShapeRectangle
+        ? ctx.fillRect(351, 1356, 5, 25)
+        : ctx.fillRect(645, 1401, 6, 32);
+
+    ctx.beginPath();
+
+    if (data.isCardShapeRectangle) {
+        ctx.moveTo(359, 1368.5);
+        ctx.lineTo(381, 1356);
+        ctx.lineTo(381, 1381);
+        ctx.lineTo(359, 1368.5);
+    } else {
+        ctx.moveTo(655, 1417);
+        ctx.lineTo(683, 1401);
+        ctx.lineTo(683, 1433);
+        ctx.lineTo(655, 1417);
+    }
+
+    ctx.stroke();
+
+    ctx.fillStyle = "rgb(255,255,255)"; // To remove other color effect on dominateColor due to transparency
+    ctx.fill();
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+    ctx.fill();
+
+    // Play
+
+    ctx.beginPath();
+    data.isCardShapeRectangle
+        ? ctx.arc(544, 1371, 70, 0, Math.PI * 2, false)
+        : ctx.arc(903, 1416, 95, 0, Math.PI * 2, false);
+
+    ctx.stroke();
+    ctx.fillStyle = data.complementaryColor;
+    ctx.fill();
+
+    // Symbol
+
+    ctx.beginPath();
+    if (data.isCardShapeRectangle) {
+        ctx.moveTo(524, 1344);
+        ctx.lineTo(571, 1369);
+        ctx.lineTo(524, 1394);
+        ctx.lineTo(524, 1344);
+    } else {
+        ctx.moveTo(879, 1381);
+        ctx.lineTo(940, 1416);
+        ctx.lineTo(879, 1451);
+        ctx.lineTo(879, 1381);
+    }
+
+    ctx.stroke();
+
+    ctx.fillStyle = "rgb(255,255,255)"; // To remove other color effect on dominateColor due to transparency
+    ctx.fill();
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+    ctx.fill();
+
+    //  Next
+
+    ctx.beginPath();
+    data.isCardShapeRectangle
+        ? ctx.arc(718, 1370, 45, 0, Math.PI * 2, false)
+        : ctx.arc(1146, 1416, 60, 0, Math.PI * 2, false);
+    ctx.stroke();
+    ctx.fillStyle = data.complementaryColor;
+    ctx.fill();
+
+    // Symbol
+
+    ctx.beginPath();
+
+    if (data.isCardShapeRectangle) {
+        ctx.moveTo(703, 1356);
+        ctx.lineTo(725, 1368.5);
+        ctx.lineTo(703, 1381);
+        ctx.lineTo(703, 1356);
+    } else {
+        ctx.moveTo(1122, 1401);
+        ctx.lineTo(1150, 1417);
+        ctx.lineTo(1122, 1433);
+        ctx.lineTo(1122, 1401);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "rgb(255,255,255)"; // To remove other color effect on dominateColor due to transparency
+    ctx.fill();
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+    ctx.fill();
+
+    ctx.fillStyle = "rgb(255,255,255)";
+
+    data.isCardShapeRectangle
+        ? ctx.fillRect(728, 1356, 5, 25)
+        : ctx.fillRect(1156, 1401, 6, 32);
+
+    ctx.fillStyle = "rgb(" + data.bgColor + ")";
+
+    data.isCardShapeRectangle
+        ? ctx.fillRect(728, 1356, 5, 25)
+        : ctx.fillRect(1156, 1401, 6, 32);
+
+    // Draw Eualizer
+
+    imgData.equalizerBackgroundImg = ctx.getImageData(
+        data.equalizerX - 10,
+        data.equalizerY - data.barHeight - 10,
+        data.equalizerWidth + 20,
+        data.barHeight * 2 + 20
+    );
+    drawAudioEqualizer(
+        data.equalizerX,
+        data.equalizerY,
+        data.equalizerWidth,
+        data.barHeight,
+        data.interval,
+        data.complementaryColor,
+        ctx,
+        imgData,
+        data.freqArr[0],
+        true,
+        true,
+        1
+    );
+    drawAudioEqualizer(
+        data.equalizerX,
+        data.equalizerY,
+        data.equalizerWidth,
+        data.barHeight,
+        data.interval,
+        data.complementaryColor,
+        ctx,
+        imgData,
+        data.freqArr[0],
+        true,
+        false,
+        1,
+        false
+    );
+
+    // Gradient
+
+    var grd = ctx.createLinearGradient(...data.linearGradient);
+    grd.addColorStop(0, data.complementaryColor);
+    grd.addColorStop(1, data.fontColor);
+
+    ctx.beginPath();
+
+    // ctx.roundRect(...data.gradientPosition)
+
+    // console.log("data.gradientPosition", data.gradientPosition)
+
+    ctx.beginPath();
+    ctx.moveTo(
+        data.gradientPosition[0] + data.gradientPosition[4],
+        data.gradientPosition[1]
+    );
+    ctx.arcTo(
+        data.gradientPosition[0] + data.gradientPosition[2],
+        data.gradientPosition[1],
+        data.gradientPosition[0] + data.gradientPosition[2],
+        data.gradientPosition[1] + data.gradientPosition[3],
+        data.gradientPosition[4]
+    );
+    ctx.arcTo(
+        data.gradientPosition[0] + data.gradientPosition[2],
+        data.gradientPosition[1] + data.gradientPosition[3],
+        data.gradientPosition[0],
+        data.gradientPosition[1] + data.gradientPosition[3],
+        data.gradientPosition[4]
+    );
+    ctx.arcTo(
+        data.gradientPosition[0],
+        data.gradientPosition[1] + data.gradientPosition[3],
+        data.gradientPosition[0],
+        data.gradientPosition[1],
+        data.gradientPosition[4]
+    );
+    ctx.arcTo(
+        data.gradientPosition[0],
+        data.gradientPosition[1],
+        data.gradientPosition[0] + data.gradientPosition[2],
+        data.gradientPosition[1],
+        data.gradientPosition[4]
+    );
+    ctx.closePath();
+
+    ctx.stroke();
+
+    ctx.fillStyle = grd;
+    ctx.fill();
+}
+
+function animateSync(data, ctx, i, j, time, imgData, profileImg, l, k) {
+    Number.isInteger(j / 6)
+        ? animateSyncEqualizer(data, ctx, j / 6, imgData)
+        : "";
+    Number.isInteger(time * 5) && time * 5 <= data.sentenceLength
+        ? animateSyncTyping(data, ctx, time * 5, imgData, l, k)
+        : "";
+}
+
+function animateSyncTyping(data, ctx, i, imgData, l, k) {
+    // Title typing
+    i <= data.title.length
+        ? typingAnimation(
+            data.titleArr[k].word,
+            l,
+            data.titleArr[k].backgroundImgPositionX,
+            data.titleArr[k].backgroundImgPositionY,
+            data.fontColor,
+            data.titleFontStyleForBackEnd,
+            imgData.titleBackgroundImg[k],
+            ctx,
+            data.titleArr[k].textPositionX,
+            data.titleArr[k].textPositionY
+        )
+        : "";
+
+    // UserName typing
+    i <= data.userNameLength
+        ? typingAnimation(
+            data.userName,
+            i,
+            data.userNameeBackgroundImgPositionX,
+            data.userNameeBackgroundImgPositionY,
+            data.fontColor,
+            data.userNameFontStyleForBackEnd,
+            imgData.userNameeBackgroundImg,
+            ctx,
+            data.userNamePositionX,
+            data.userNamePositionY
+        )
+        : "";
+}
+
+function animateSyncEqualizer(data, ctx, i, imgData) {
+    drawAudioEqualizer(
+        data.equalizerX,
+        data.equalizerY,
+        data.equalizerWidth,
+        data.barHeight,
+        data.interval,
+        data.complementaryColor,
+        ctx,
+        imgData,
+        data.freqArr[i],
+        true,
+        true,
+        1
+    );
+    drawAudioEqualizer(
+        data.equalizerX,
+        data.equalizerY,
+        data.equalizerWidth,
+        data.barHeight,
+        data.interval,
+        data.complementaryColor,
+        ctx,
+        imgData,
+        data.freqArr[i],
+        true,
+        false,
+        1,
+        false
+    );
+}
+
+function listenTemplate(data, ctx, profileImg, imgData) {
+    // Set Background color of Outermost part 
+    ctx.fillStyle = 'rgb(255,255,255)' // To remove player background effcet due to transparency of dominate color;
+    ctx.fillRect(0, 0, data.canvasWidth, data.canvasHeight)
+    ctx.fillStyle = 'rgb(' + data.bgColor + ')';
+    ctx.fillRect(0, 0, data.canvasWidth, data.canvasHeight)
+
+
+    ctx.font = data.titleFontStyle;
+    ctx.fillStyle = data.fontColor;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    // Type title
+
+    data.titleArr.forEach((item, i) => {
+        ctx.fillText(item.word, item.textPositionX, item.textPositionY);
+    });
+
+
+
+
+    // Type card Name
+
+    ctx.font = data.userNameFontStyle;
+    ctx.fillText('LISTEN NOW', data.userNamePositionX, data.userNamePositionY);
+
+
+    imgData.progressBarBackgroundImg = ctx.getImageData(data.progressBarX - 20, data.progressBarY - 20, data.progressBarwidth + 40, 50)
+
+
+    // Draw Image to get background Inage without sinwave
+    rotatePhonograph(data, ctx, 0, profileImg, imgData.phonographImg)
+
+
+    // Get Image 
+    imgData.leftSinWaveBackgroundImg = ctx.getImageData(data.leftSinWaveBackgroundX, data.leftSinWaveBackgroundY, data.leftSinWaveWidth, data.leftSinWaveHeight)
+    imgData.rightSinWaveBackgroundImg = ctx.getImageData(data.rightSinWaveBackgroundX, data.rightSinWaveBackgroundY, data.rightSinWaveWidth, data.rightSinWaveHeight)
+
+
+    drawSineWave(data.sinWaveAmplitute, data.sinWaveFrequency, data.fontColor, ctx, data.leftSinWaveCenterY, data.rightSinWaveCenterY, 9, data.waveLength, data.leftShift, data.rightShift, data.rightSinWaveBackgroundX)
+
+    // Drwa Image Again
+    rotatePhonograph(data, ctx, 0, profileImg, imgData.phonographImg)
+
+
+    // Draw Progress bar
+    drawAudioProgressBar(data.progressBarX, data.progressBarY, data.progressBarwidth, 10, data.complementaryColor, data.progressBarArcRadius, 0, data.duration, data.fontColor, ctx, data.audioProgressPosition, 0, false, imgData)
+
+    ctx.drawImage(imgData.musicPlayerImg, data.progressBarX, data.musicPlayerImgY, data.progressBarwidth, data.musicPlayerImgHeight)
+}
+
+function animateListen(data, ctx, i, j, time, imgData, profileImg, l, k) {
+
+    timeSpend = (i + 1) / data.frameRate;
+    progressPercentage = i / (data.frameCount - 1);
+
+    drawAudioProgressBar(
+        data.progressBarX,
+        data.progressBarY,
+        data.progressBarwidth,
+        10,
+        data.complementaryColor,
+        20,
+        timeSpend,
+        data.duration,
+        data.fontColor,
+        ctx,
+        data.audioProgressPosition,
+        (data.progressBarwidth - 40) * progressPercentage,
+        false,
+        imgData
+    );
+
+    ctx.putImageData(imgData.leftSinWaveBackgroundImg, data.leftSinWaveBackgroundX, data.leftSinWaveBackgroundY)
+    ctx.putImageData(imgData.rightSinWaveBackgroundImg, data.rightSinWaveBackgroundX, data.rightSinWaveBackgroundY)
+    drawSineWave(data.sinWaveAmplitute + 5 * j, data.sinWaveFrequency, data.fontColor, ctx, data.leftSinWaveCenterY, data.rightSinWaveCenterY, 9, data.waveLength, data.leftShift, data.rightShift, data.rightSinWaveBackgroundX)
+    rotatePhonograph(data, ctx, 2 * i, profileImg, imgData.phonographImg)
+
+}
+
+module.exports = { vinylTemplate, animateVinyl, syncTemplate, animateSync, listenTemplate, animateListen };
